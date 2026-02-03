@@ -9,14 +9,15 @@ const IMMUNE_DURATION = 6000;
 
 const POWER_CD = 45000;
 const power = {
-  minigun: { cd: POWER_CD, last: -1e9 },
-  bomb:    { cd: POWER_CD, last: -1e9 },
-  immune:  { cd: POWER_CD, last: -1e9 },
+  minigun: { cd: POWER_CD, last: -1e9, unlocked: false },
+  bomb:    { cd: POWER_CD, last: -1e9, unlocked: false },
+  immune:  { cd: POWER_CD, last: -1e9, unlocked: false },
 };
 
 function isImmune() { return performance.now() < immuneUntil; }
 function isMinigun() { return performance.now() < minigunActiveUntil; }
 function canUse(p) { return performance.now() >= p.last + p.cd; }
+function isUnlocked(p) { return p.unlocked; }
 
 function updatePowersUI() {
   const now = performance.now();
@@ -29,6 +30,16 @@ function updatePowersUI() {
   const b3 = document.getElementById("btn-power-3");
 
   function setCD(fillEl, btnEl, p) {
+    if (!isUnlocked(p)) {
+      fillEl.style.width = "100%";
+      fillEl.style.background = "rgba(120,120,120,0.6)";
+      btnEl.textContent = "Bloqueado";
+      btnEl.disabled = true;
+      btnEl.style.opacity = 0.6;
+      return;
+    }
+
+    fillEl.style.background = "rgba(160,120,255,0.9)";
     const left = (p.last + p.cd) - now;
     const ready = left <= 0;
     const prog = ready ? 0 : clamp(left / p.cd, 0, 1);
@@ -45,6 +56,7 @@ function updatePowersUI() {
 
 function activateMinigun() {
   const now = performance.now();
+  if (!isUnlocked(power.minigun)) return;
   if (!canUse(power.minigun)) return;
   power.minigun.last = now;
   minigunActiveUntil = now + MINIGUN_DURATION;
@@ -54,6 +66,7 @@ function activateMinigun() {
 
 function activateBomb() {
   const now = performance.now();
+  if (!isUnlocked(power.bomb)) return;
   if (!canUse(power.bomb)) return;
   power.bomb.last = now;
 
@@ -105,6 +118,7 @@ function activateBomb() {
 
 function activateImmune() {
   const now = performance.now();
+  if (!isUnlocked(power.immune)) return;
   if (!canUse(power.immune)) return;
   power.immune.last = now;
   immuneUntil = now + IMMUNE_DURATION;
