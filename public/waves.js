@@ -4,6 +4,51 @@ let waveActive = false;
 let toSpawn = { red: 0, white: 0, yellow: 0, orange: 0, pink: 0, green: 0 };
 let spawnTimer = null;
 let spawnTickMs = 360;
+let waveCountdownRaf = null;
+
+function resetWaveCountdown() {
+  if (waveCountdownRaf) cancelAnimationFrame(waveCountdownRaf);
+  waveCountdownRaf = null;
+  const container = document.getElementById("wave-countdown");
+  const fill = document.getElementById("wave-countdown-fill");
+  const label = document.getElementById("wave-countdown-seconds");
+  if (container) container.classList.add("hidden");
+  if (fill) fill.style.width = "0%";
+  if (label) label.textContent = "10";
+}
+
+function startWaveCountdown(durationMs, onComplete) {
+  const container = document.getElementById("wave-countdown");
+  const fill = document.getElementById("wave-countdown-fill");
+  const label = document.getElementById("wave-countdown-seconds");
+  if (!container || !fill || !label) {
+    onComplete();
+    return;
+  }
+
+  if (waveCountdownRaf) cancelAnimationFrame(waveCountdownRaf);
+  container.classList.remove("hidden");
+
+  const start = performance.now();
+
+  const tick = () => {
+    if (isGameOver) return;
+    const elapsed = performance.now() - start;
+    const progress = clamp(elapsed / durationMs, 0, 1);
+    fill.style.width = `${progress * 100}%`;
+    const left = Math.max(0, Math.ceil((durationMs - elapsed) / 1000));
+    label.textContent = String(left);
+
+    if (progress < 1) {
+      waveCountdownRaf = requestAnimationFrame(tick);
+    } else {
+      resetWaveCountdown();
+      onComplete();
+    }
+  };
+
+  waveCountdownRaf = requestAnimationFrame(tick);
+}
 
 function stopSpawning() {
   if (spawnTimer) clearInterval(spawnTimer);
@@ -45,6 +90,7 @@ function startWave(w) {
   wave = w;
   waveActive = true;
   toSpawn = waveCounts(w);
+  resetWaveCountdown();
 
   stopSpawning();
   spawnTimer = setInterval(() => {
@@ -65,7 +111,13 @@ function waveCleared() {
   showMessage(`Horda ${wave} limpa! +${10 + wave * 2} coins`, { color: "#55ff55", duration: 1500 });
   updateShop();
 
-  setTimeout(() => {
-    if (!isGameOver) startWave(wave + 1);
-  }, 1200);
+  if (typeof startRoundChoices === "function") {
+    startRoundChoices();
+    updateShop();
+  }
+
+  const nextWave = wave + 1;
+  startWaveCountdown(10000, () => {
+    if (!isGameOver) startWave(nextWave);
+  });
 }
