@@ -318,6 +318,9 @@ function initGame() {
   power.minigun.last = -1e9;
   power.bomb.last = -1e9;
   power.immune.last = -1e9;
+  power.minigun.unlocked = false;
+  power.bomb.unlocked = false;
+  power.immune.unlocked = false;
 
   wave = 1;
   waveActive = false;
