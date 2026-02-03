@@ -30,11 +30,11 @@ h1{
   line-height:1.1;
 }
 
-/* TOP: loja + canvas + bônus */
+/* TOP: loja + canvas + arsenal */
 #game-layout{
   width: min(1500px, 96vw);
   display:grid;
-  grid-template-columns: 240px 600px 480px;
+  grid-template-columns: 240px 600px 260px;
   gap:10px;
   align-items:start;
   justify-content:center;
@@ -483,10 +483,49 @@ canvas{
       </div>
     </div>
 
-    <!-- BÔNUS DA RODADA -->
-    <div class="panel" id="panel-round-bonus">
-      <h2>Escolhas da Rodada (grátis)</h2>
-      <div id="round-choices" class="choice-list"></div>
+    <!-- ARSENAL -->
+    <div class="panel" id="panel-arsenal">
+      <h2>Arsenal</h2>
+
+      <div class="panel-section">
+        <h3>Arma</h3>
+        <div class="meta">
+          <span>Dano: <b id="weapon-dmg">1</b></span>
+          <span>Delay: <b id="weapon-rate">160</b>ms</span>
+        </div>
+
+        <button id="upg-damage">Upgrade Dano (...)</button>
+        <button id="upg-firerate">Upgrade Cadência (...)</button>
+        <button id="buy-bomb">Comprar Bomba +1 (30 coins)</button>
+
+        <div class="hint">
+          Dano aumenta o HP que você tira por tiro.<br/>
+          Cadência diminui o tempo entre tiros.
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <h3>Armadura</h3>
+        <div class="meta">
+          <span>Nível: <b id="armor-level">0</b></span>
+          <span>Redução: <b id="armor-reduction">0</b>%</span>
+        </div>
+
+        <button id="buy-armor">Comprar Armadura (...)</button>
+        <button id="buy-dash">Comprar Dash (50 coins)</button>
+        <button id="buy-shield">Comprar Escudo +30 (25 coins)</button>
+        <button id="buy-spikes">Comprar Espinhos +1 (20 coins)</button>
+
+        <div class="hint">
+          Cada nível reduz o dano recebido.<br/>
+          (tem limite máximo)
+        </div>
+      </div>
+
+      <div>
+        <h3>Bônus da rodada (grátis)</h3>
+        <div id="round-choices" class="choice-list"></div>
+      </div>
     </div>
   </div>
 

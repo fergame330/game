@@ -1,4 +1,8 @@
 // shop.js
+function armorCost() { return 30 * (player.armorLevel + 1); }
+function damageUpgCost() { return 25 * (player.bulletDamage + 1); }
+function fireRateUpgCost() { return 35 * (fireRateLevel + 1); }
+
 const ROUND_CHOICES_COUNT = 3;
 const roundChoiceState = {
   options: [],
@@ -62,6 +66,32 @@ function buildRoundChoicePool() {
         fireRateLevel += 1;
         fireRateMs = Math.max(60, fireRateMs - 15);
         showMessage("Cadência melhorada!", { color: "#ffd700" });
+      },
+    });
+  }
+
+  if (player.ammo <= 40) {
+    consumables.push({
+      id: "ammo",
+      type: "Consumível",
+      title: "+10 balas",
+      desc: "Reforço rápido de munição.",
+      apply: () => {
+        player.ammo += 10;
+        showMessage("+10 balas!", { color: "#55ff55" });
+      },
+    });
+  }
+
+  if (player.hp < player.maxHp) {
+    consumables.push({
+      id: "medkit",
+      type: "Consumível",
+      title: "Kit Médico +30 HP",
+      desc: "Cura instantânea.",
+      apply: () => {
+        player.hp = Math.min(player.maxHp, player.hp + 30);
+        showMessage("+30 HP!", { color: "#55ff55" });
       },
     });
   }
@@ -283,6 +313,26 @@ function updateShop() {
   document.getElementById("coins").textContent = String(player.coins);
   document.getElementById("wave").textContent = String(wave);
 
+  document.getElementById("weapon-dmg").textContent = String(player.bulletDamage);
+  document.getElementById("weapon-rate").textContent = String(fireRateMs);
+
+  document.getElementById("buy-dash").textContent =
+  player.dashUnlocked ? "Dash (COMPRADO)" : "Comprar Dash (50 coins)";
+
+  document.getElementById("armor-level").textContent = String(player.armorLevel);
+  document.getElementById("armor-reduction").textContent =
+    String(Math.round(player.damageReduction * 100));
+
+  document.getElementById("buy-armor").textContent =
+    `Comprar Armadura (${armorCost()} coins)`;
+  document.getElementById("upg-damage").textContent =
+    `Upgrade Dano (${damageUpgCost()} coins)`;
+  document.getElementById("upg-firerate").textContent =
+    `Upgrade Cadência (${fireRateUpgCost()} coins)`;
+document.getElementById("buy-shield").textContent = `Comprar Escudo +30 (25 coins)`;
+document.getElementById("buy-spikes").textContent = `Comprar Espinhos +1 (20 coins)`;
+  document.getElementById("buy-bomb").textContent = `Comprar Bomba +1 (30 coins)`;
+
   renderRoundChoices();
   renderStatusBars();
   renderInventory();
@@ -303,7 +353,7 @@ document.getElementById("round-choices").addEventListener("click", (e) => {
   updateShop();
 });
 
-// compras
+// compras / upgrades (funções reaproveitáveis pros atalhos)
 function buyAmmo() {
   if (player.coins >= 10) {
     player.ammo += 10;
@@ -355,6 +405,50 @@ document.addEventListener("keydown", (e) => {
 
   if (k === "q") buyAmmo();
   if (k === "e") buyMedkit();
+  if (k === "z") upgDamage();
+  if (k === "x") upgFireRate();
+  if (k === "c") buyArmor();
+});
+
+document.getElementById("buy-shield").addEventListener("click", () => {
+  if (isGameOver) return;
+
+  const cost = 25;
+  if (player.coins < cost) return showMessage("Moedas insuficientes!", { color: "#ff5555" });
+
+  if (player.shieldHp > 0) {
+    showMessage("Escudo já está ativo!", { color: "#ffcc55" });
+    return;
+  }
+
+  player.coins -= cost;
+  player.shieldHp = player.shieldMax; // +30
+  showMessage("Escudo +30!", { color: "rgba(80,220,255,0.95)" });
+  updateShop();
+});
+
+document.getElementById("buy-spikes").addEventListener("click", () => {
+  if (isGameOver) return;
+
+  const cost = 20;
+  if (player.coins < cost) return showMessage("Moedas insuficientes!", { color: "#ff5555" });
+
+  player.coins -= cost;
+  player.spikes += 1;
+  showMessage("Espinho +1!", { color: "#ffffff" });
+  updateShop();
+});
+
+document.getElementById("buy-bomb").addEventListener("click", () => {
+  if (isGameOver) return;
+
+  const cost = 30;
+  if (player.coins < cost) return showMessage("Moedas insuficientes!", { color: "#ff5555" });
+
+  player.coins -= cost;
+  player.bombs += 1;
+  showMessage("Bomba +1!", { color: "rgba(80,220,255,0.95)" });
+  updateShop();
 });
 
 window.startRoundChoices = startRoundChoices;
