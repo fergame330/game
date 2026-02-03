@@ -261,9 +261,9 @@ if (sh > 0 && effectiveCur > 0) {
   document.getElementById("stat-armor-text").textContent =
     `${Math.round(player.damageReduction * 100)}% (Nv ${player.armorLevel})`;
   
-  document.getElementById("stat-wave-text").textContent = String(wave);
-  const remaining = Object.values(toSpawn).reduce((a, b) => a + b, 0) + enemies.length;
-  document.getElementById("stat-remaining-text").textContent = String(remaining);
+  document.getElementById("stat-damage-text").textContent = String(player.bulletDamage);
+  document.getElementById("stat-rate-text").textContent = `${fireRateMs}ms`;
+  document.getElementById("stat-spikes-text").textContent = String(player.spikes);
 
   document.getElementById("stat-immune-text").textContent = isImmune() ? "SIM" : "não";
   document.getElementById("stat-minigun-text").textContent = isMinigun() ? "ON" : "off";
@@ -276,17 +276,16 @@ window.selectedInventoryItem = null; // "bomb" | null
 function renderInventory() {
   const grid = document.getElementById("inventory-grid");
 
-  const cards = [
-    { key: "armor",  name: "Armadura", lvl: player.armorLevel, desc: `Redução: ${Math.round(player.damageReduction * 100)}%`, selectable: false },
-    { key: "dmg",    name: "Dano",     lvl: player.bulletDamage, desc: `Dano por tiro: ${player.bulletDamage}`, selectable: false },
-    { key: "rate",   name: "Cadência", lvl: fireRateLevel, desc: `Delay: ${fireRateMs}ms`, selectable: false },
-
-    // ✅ consumíveis
-    { key: "shield", name: "Escudo",   lvl: player.shieldHp > 0 ? `${player.shieldHp}/${player.shieldMax}` : "0", desc: "HP extra (não cumulativo)", selectable: false },
-    { key: "spikes", name: "Espinhos", lvl: player.spikes, desc: "Ao encostar: inimigo toma 1 e consome 1", selectable: false },
-
-    { key: "bomb",   name: "Bombas",   lvl: player.bombs,  desc: "Clique pra selecionar e atire pra explodir", selectable: true },
-  ];
+  const cards = [];
+  if (player.bombs > 0) {
+    cards.push({
+      key: "bomb",
+      name: "Bombas",
+      lvl: player.bombs,
+      desc: "Clique pra selecionar e atire pra explodir",
+      selectable: true,
+    });
+  }
 
   grid.innerHTML = cards.map(c => {
     const selected = c.key === "bomb" && window.selectedInventoryItem === "bomb";
@@ -297,7 +296,7 @@ function renderInventory() {
       <div class="card" data-item="${c.key}" style="border:${border}; cursor:${cursor};">
         <div class="title">
           <span class="name">${c.name}</span>
-          <span class="lvl">Nv ${c.lvl}</span>
+          <span class="lvl">Qnt ${c.lvl}</span>
         </div>
         <div class="desc">${c.desc}</div>
       </div>
