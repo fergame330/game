@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Mini RPG Shooter</title>
+
+  <style>
+html, body{
+  height:100%;
+  overflow:hidden; /* impede scroll do site */
+}
+
+body{
+  margin:0;
+  height:100vh;          /* trava a viewport */
+  background:#111;
+  color:#fff;
+  font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+/* deixa o título mais compacto pra caber */
+h1{
+  margin:8px 0 6px;      /* antes era 12px */
+  font-size:18px;        /* antes era 20px */
+  text-align:center;
+  line-height:1.1;
+}
+
+/* TOP: loja + canvas + arma + armadura */
+#game-layout{
+  width: min(1500px, 96vw);
+  display:grid;
+  grid-template-columns: 240px 600px 240px 240px;
+  gap:10px;
+  align-items:start;
+  justify-content:center;
+
+  /* não deixa “empurrar” a página pra baixo */
+  flex: 0 0 auto;
+}
+
+/* canvas column continua igual */
+#canvas-column{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  width:600px;
+}
+#canvas-wrap{
+  position:relative;
+  width:600px;
+  height:400px;
+}
+canvas{
+  background:#222;
+  border:1px solid #000;
+  display:block;
+}
+
+/* painéis laterais: mantém 400px e scroll interno se precisar */
+.panel{
+  background:#333;
+  border:1px solid #000;
+  padding:10px;
+  box-sizing:border-box;
+  border-radius:10px;
+  height:400px;
+  overflow:auto;
+}
+.panel h2{
+  margin:6px 0 10px;
+  font-size:16px;
+}
+.meta{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+  color:#ddd;
+  font-size:13px;
+}
+.panel button{
+  width:100%;
+  margin-bottom:10px;
+  padding:9px 10px;
+  cursor:pointer;
+  background:#444;
+  border:1px solid #111;
+  color:#fff;
+  border-radius:10px;
+  text-align:left;
+}
+.panel button:hover{ filter:brightness(1.1); }
+.hint{
+  color:#bbb;
+  font-size:12px;
+  line-height:1.35;
+  margin-top:6px;
+}
+
+/* GAME OVER overlay */
+#gameover{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(0,0,0,0.55);
+  z-index: 10;
+}
+#gameover.hidden{ display:none; }
+
+.go-card{
+  width: 70%;
+  max-width: 420px;
+  background: rgba(20,20,20,0.92);
+  border: 1px solid #000;
+  border-radius: 14px;
+  padding: 16px 16px 14px;
+  text-align:center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.go-title{
+  font-size: 28px;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  color: #fff;
+}
+.go-bar{
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  overflow:hidden;
+  border: 1px solid rgba(0,0,0,0.6);
+  margin-bottom: 12px;
+}
+.go-bar-fill{
+  height:100%;
+  width:0%;
+  background: rgba(255,80,80,0.9);
+  transition: width 0.1s linear;
+}
+#btn-retry{
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #111;
+  background:#444;
+  color:#fff;
+  cursor:pointer;
+  font-size:14px;
+}
+#btn-retry:hover{ filter:brightness(1.1); }
+
+/* BOTTOM UI: cola no resto do espaço e não cria scroll */
+#bottom-ui{
+  width: min(1500px, 96vw);
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap:10px;
+
+  /* em vez de margin grande, usa compacto */
+  margin:8px 0 10px;
+
+  /* isso garante que a área de baixo “encaixa” na viewport */
+  flex: 1 1 auto;
+  min-height: 0;         /* CRÍTICO: permite encolher sem forçar scroll */
+  overflow:hidden;       /* nada empurra o body */
+}
+
+.bottom-panel{
+  background:#2a2a2a;
+  border:1px solid #000;
+  border-radius:10px;
+  padding:10px;
+  box-sizing:border-box;
+
+  /* sem scroll e sem estourar */
+  overflow:hidden;
+  min-height: 0;
+}
+
+.bottom-panel h3{
+  margin:0 0 8px;
+  font-size:14px;
+  color:#ddd;
+  letter-spacing:.2px;
+}
+
+/* status bars */
+.stat{ margin-bottom:10px; }
+.stat-top{
+  display:flex;
+  justify-content:space-between;
+  font-size:12px;
+  color:#ddd;
+  margin-bottom:6px;
+}
+.bar{
+  height:10px;
+  background:rgba(255,255,255,0.10);
+  border:1px solid rgba(0,0,0,0.6);
+  border-radius:999px;
+  overflow:hidden;
+}
+.bar-fill{
+  height:100%;
+  width:0%;
+  background: rgba(120,200,255,0.9);
+  transition: width 0.1s linear;
+}
+.smallline{
+  display:flex;
+  gap:8px;
+  font-size:12px;
+  color:#ccc;
+  margin-top:6px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+/* inventário cards */
+#inventory-grid{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:8px;
+}
+.card{
+  background:#3a3a3a;
+  border:1px solid #111;
+  border-radius:10px;
+  padding:8px;
+  min-width:0;
+}
+.card .title{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  font-size:12px;
+  margin-bottom:6px;
+}
+.card .name{ color:#fff; font-weight:700; }
+.card .lvl{ color:#ffd700; font-weight:700; }
+.card .desc{
+  font-size:11px;
+  color:#bbb;
+  line-height:1.25;
+}
+
+/* poderes */
+#powers-row{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:8px;
+}
+.power{
+  background:#3a3a3a;
+  border:1px solid #111;
+  border-radius:10px;
+  padding:8px;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.power-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+.power-name{
+  font-size:12px;
+  font-weight:800;
+}
+.power-key{
+  font-size:11px;
+  color:#bbb;
+  border:1px solid #111;
+  background:#2f2f2f;
+  padding:2px 6px;
+  border-radius:8px;
+  white-space:nowrap;
+}
+.power-desc{
+  font-size:11px;
+  color:#bbb;
+  line-height:1.25;
+  min-height:32px;
+}
+.power button{
+  width:100%;
+  margin:0;
+  padding:8px 10px;
+  cursor:pointer;
+  background:#444;
+  border:1px solid #111;
+  color:#fff;
+  border-radius:10px;
+  text-align:center;
+  font-size:12px;
+}
+.power button:hover{ filter:brightness(1.1); }
+.cooldown{
+  height:8px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.10);
+  border:1px solid rgba(0,0,0,0.6);
+  overflow:hidden;
+}
+.cooldown-fill{
+  height:100%;
+  width:0%;
+  background: rgba(160,120,255,0.9);
+  transition: width 0.1s linear;
+}
+
+/* responsivo */
+@media (max-width: 1150px){
+  html, body{ overflow:auto; } /* no mobile deixa rolar mesmo */
+  #game-layout{
+    grid-template-columns: 1fr;
+    justify-items:center;
+  }
+  #canvas-column{ width: min(600px, 96vw); }
+  #canvas-wrap{ width: min(600px, 96vw); height:auto; }
+  canvas{ width: min(600px, 96vw); height:auto; }
+  .panel{ width: min(600px, 96vw); height:auto; }
+
+  #bottom-ui{
+    width: min(600px, 96vw);
+    grid-template-columns: 1fr;
+    overflow:visible;
+  }
+  #inventory-grid{ grid-template-columns: repeat(2, 1fr); }
+  #powers-row{ grid-template-columns: 1fr; }
+}
+
+  </style>
+</head>
+
+<body>
+  <h1>Mini RPG Shooter</h1>
+
+  <div id="game-layout">
+    <!-- LOJA -->
+    <div class="panel" id="panel-shop">
+      <h2>Loja</h2>
+      <div class="meta">
+        <span>Moedas: <b id="coins">0</b></span>
+        <span>Horda: <b id="wave">1</b></span>
+      </div>
+
+      <button id="buy-ammo">Comprar 10 balas (10 coins)</button>
+      <button id="buy-medkit">Comprar Kit Médico +30 HP (15 coins)</button>
+
+      <div class="hint">
+        Controles: WASD / Setas<br/>
+        Clique: atirar<br/>
+        Poderes: 1 / 2 / 3<br/>
+        Metralhadora dura 3s e recarga 45s
+      </div>
+    </div>
+
+    <!-- COLUNA DO CANVAS -->
+    <div id="canvas-column">
+      <div id="canvas-wrap">
+        <canvas id="game" width="600" height="400"></canvas>
+
+        <div id="gameover" class="hidden">
+          <div class="go-card">
+            <div class="go-title">GAME OVER</div>
+            <div class="go-bar">
+              <div class="go-bar-fill" id="go-bar-fill"></div>
+            </div>
+            <button id="btn-retry">Tentar novamente</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ARMA -->
+    <div class="panel" id="panel-weapon">
+      <h2>Arma</h2>
+
+      <div class="meta">
+        <span>Dano: <b id="weapon-dmg">1</b></span>
+        <span>Delay: <b id="weapon-rate">160</b>ms</span>
+      </div>
+
+      <button id="upg-damage">Upgrade Dano (...)</button>
+      <button id="upg-firerate">Upgrade Cadência (...)</button>
+      <button id="buy-bomb">Comprar Bomba +1 (30 coins)</button>
+
+      <div class="hint">
+        Dano aumenta o HP que você tira por tiro.<br/>
+        Cadência diminui o tempo entre tiros.
+      </div>
+    </div>
+
+    <!-- ARMADURA -->
+    <div class="panel" id="panel-armor">
+      <h2>Armadura</h2>
+
+      <div class="meta">
+        <span>Nível: <b id="armor-level">0</b></span>
+        <span>Redução: <b id="armor-reduction">0</b>%</span>
+      </div>
+
+      <button id="buy-armor">Comprar Armadura (...)</button>
+      <button id="buy-dash">Comprar Dash (50 coins)</button>
+      <button id="buy-shield">Comprar Escudo +30 (25 coins)</button>
+      <button id="buy-spikes">Comprar Espinhos +1 (20 coins)</button>
+
+      <div class="hint">
+        Cada nível reduz o dano recebido.<br/>
+        (tem limite máximo)
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM UI (fora do grid superior, largura toda) -->
+  <div id="bottom-ui">
+    <!-- STATUS -->
+    <div class="bottom-panel" id="status-panel">
+      <h3>Status</h3>
+
+      <div class="stat">
+        <div class="stat-top">
+          <span>HP</span>
+          <b id="stat-hp-text">100/100</b>
+        </div>
+        <div class="bar"><div class="bar-fill" id="bar-hp"></div></div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-top">
+          <span>Munição</span>
+          <b id="stat-ammo-text">10</b>
+        </div>
+        <div class="bar"><div class="bar-fill" id="bar-ammo"></div></div>
+      </div>
+
+      <div class="smallline">
+        <span>Armadura</span><b id="stat-armor-text">0% (Nv 0)</b>
+      </div>
+
+      <div class="smallline">
+        <span>Horda</span><b id="stat-wave-text">1</b>
+        <span style="opacity:.7">•</span>
+        <span>Restantes</span><b id="stat-remaining-text">0</b>
+      </div>
+
+      <div class="smallline">
+        <span>Imune</span><b id="stat-immune-text">não</b>
+        <span style="opacity:.7">•</span>
+        <span>Minigun</span><b id="stat-minigun-text">off</b>
+      </div>
+    </div>
+
+    <!-- INVENTÁRIO -->
+    <div class="bottom-panel" id="inventory-panel">
+      <h3>Inventário</h3>
+      <div id="inventory-grid"></div>
+    </div>
+
+    <!-- PODERES -->
+    <div class="bottom-panel" id="powers-panel">
+      <h3>Poderes</h3>
+
+      <div id="powers-row">
+        <div class="power">
+          <div class="power-top">
+            <div class="power-name">Metralhadora</div>
+            <div class="power-key">Tecla 1</div>
+          </div>
+          <div class="power-desc">
+            Segure o mouse: 3s de tiros sem gastar munição.
+          </div>
+          <button id="btn-power-1">Ativar</button>
+          <div class="cooldown"><div class="cooldown-fill" id="cd-1"></div></div>
+        </div>
+
+        <div class="power">
+          <div class="power-top">
+            <div class="power-name">Explosão Tripla</div>
+            <div class="power-key">Tecla 2</div>
+          </div>
+          <div class="power-desc">
+            Explode os 3 mais fortes: 5x dano + splash.
+          </div>
+          <button id="btn-power-2">Ativar</button>
+          <div class="cooldown"><div class="cooldown-fill" id="cd-2"></div></div>
+        </div>
+
+        <div class="power">
+          <div class="power-top">
+            <div class="power-name">Imunidade</div>
+            <div class="power-key">Tecla 3</div>
+          </div>
+          <div class="power-desc">
+            Você não toma dano por alguns segundos.
+          </div>
+          <button id="btn-power-3">Ativar</button>
+          <div class="cooldown"><div class="cooldown-fill" id="cd-3"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="utils.js"></script>
+  <script src="input.js"></script>
+  <script src="hud.js"></script>
+  <script src="overlay.js"></script>
+  <script src="entities.js"></script>
+  <script src="enemies.js"></script>
+  <script src="waves.js"></script>
+  <script src="shop.js"></script>
+  <script src="powers.js"></script>
+  <script src="game.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

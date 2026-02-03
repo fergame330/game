@@ -1,0 +1,23 @@
+{
+  "name": "gamefer",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make --platform=win32 --arch=x64"
+  },
+  "keywords": [],
+  "author": "devfergame",
+  "license": "ISC",
+  "description": "slaaa",
+  "devDependencies": {
+    "@electron-addons/electron-forge-maker-nsis": "^7.0.2",
+    "@electron-forge/cli": "^7.11.1",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.11.1",
+    "@electron-forge/plugin-fuses": "^7.11.1",
+    "@electron/fuses": "^1.8.0",
+    "electron": "^40.1.0"
+  }
+}
