@@ -370,9 +370,61 @@ function buyMedkit() {
     updateShop();
   } else showMessage("Moedas insuficientes!", { color: "#ff5555" });
 }
+function buyArmor() {
+  const cost = armorCost();
+  if (player.coins >= cost) {
+    player.coins -= cost;
+    player.armorLevel += 1;
+    showMessage("Armadura melhorada!", { color: "#55ccff" });
+    updateShop();
+  } else showMessage("Moedas insuficientes!", { color: "#ff5555" });
+}
+function upgDamage() {
+  const cost = damageUpgCost();
+  if (player.coins >= cost) {
+    player.coins -= cost;
+    player.bulletDamage += 1;
+    showMessage("Dano +1!", { color: "#ffd700" });
+    updateShop();
+  } else showMessage("Moedas insuficientes!", { color: "#ff5555" });
+}
+function upgFireRate() {
+  const cost = fireRateUpgCost();
+  if (player.coins >= cost) {
+    player.coins -= cost;
+    fireRateLevel += 1;
+    fireRateMs = Math.max(60, fireRateMs - 15);
+    showMessage("Cadência melhorada!", { color: "#ffd700" });
+    updateShop();
+  } else showMessage("Moedas insuficientes!", { color: "#ff5555" });
+}
+
 // botões
 document.getElementById("buy-ammo").addEventListener("click", () => { if (!isGameOver) buyAmmo(); });
 document.getElementById("buy-medkit").addEventListener("click", () => { if (!isGameOver) buyMedkit(); });
+document.getElementById("buy-armor").addEventListener("click", () => { if (!isGameOver) buyArmor(); });
+document.getElementById("upg-damage").addEventListener("click", () => { if (!isGameOver) upgDamage(); });
+document.getElementById("upg-firerate").addEventListener("click", () => { if (!isGameOver) upgFireRate(); });
+document.getElementById("buy-dash").addEventListener("click", () => {
+  if (isGameOver) return;
+
+  const cost = 50;
+  if (player.dashUnlocked) {
+    showMessage("Dash já está comprado!", { color: "#ffcc55" });
+    return;
+  }
+
+  if (player.coins < cost) {
+    showMessage("Moedas insuficientes!", { color: "#ff5555" });
+    return;
+  }
+
+  player.coins -= cost;
+  player.dashUnlocked = true;
+
+  showMessage("DASH DESBLOQUEADO! (Shift)", { color: "rgba(80,220,255,0.95)" });
+  updateShop();
+});
 
 
 
