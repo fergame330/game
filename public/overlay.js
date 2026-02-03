@@ -10,6 +10,7 @@ function triggerGameOver() {
   isGameOver = true;
 
   stopSpawning();
+  if (typeof resetWaveCountdown === "function") resetWaveCountdown();
 
   $gameover.classList.remove("hidden");
   $barFill.style.width = "0%";
