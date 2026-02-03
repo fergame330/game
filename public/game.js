@@ -326,6 +326,8 @@ function initGame() {
   messages.length = 0;
   explosions.length = 0;
 
+  resetWaveCountdown();
+  if (typeof startRoundChoices === "function") startRoundChoices();
   updateShop();
   startWave(1);
 }
