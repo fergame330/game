@@ -8,3 +8,5 @@ Figuras adaptadas (rótulos traduzidos para o português) a partir de:
 Licença original: CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/).
 Alterações: tradução dos rótulos para o português, recortes e ampliação.
 Estas adaptações são distribuídas sob a mesma licença CC BY-NC-SA 4.0.
+
+- vegetacao_mitral_limpa.png: adaptado de Kaemmerer AS et al., Pathogens 2023;12(9):1130 (CC BY 4.0) — seta e letra de painel removidas.
